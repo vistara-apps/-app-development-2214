@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Shield, Code, Users, DollarSign, CheckCircle, Star } from 'lucide-react'
+import { Shield, Code, Users, DollarSign, CheckCircle, Star, Eye, EyeOff } from 'lucide-react'
 import Button from '../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { useAuth } from '../contexts/AuthContext'
@@ -9,16 +9,49 @@ const Landing = ({ onLogin }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [showPassword, setShowPassword] = useState(false)
   const { login } = useAuth()
+
+  const validateForm = () => {
+    const newErrors = {}
+    
+    if (!email) {
+      newErrors.email = 'Email is required'
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email address'
+    }
+    
+    if (!password) {
+      newErrors.password = 'Password is required'
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+    
     setLoading(true)
+    setErrors({})
+    
     try {
       await login(email, password)
       onLogin()
     } catch (error) {
       console.error('Login failed:', error)
+      setErrors({ 
+        submit: isLoginMode 
+          ? 'Invalid email or password. Please try again.' 
+          : 'Failed to create account. Please try again.'
+      })
     } finally {
       setLoading(false)
     }
@@ -108,28 +141,76 @@ const Landing = ({ onLogin }) => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {errors.submit && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-600">{errors.submit}</p>
+                </div>
+              )}
+              
               <div>
                 <input
                   type="email"
-                  placeholder="Email"
+                  placeholder="Email address"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    if (errors.email) setErrors(prev => ({ ...prev, email: '' }))
+                  }}
+                  className={`w-full px-3 py-2 border rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.email 
+                      ? 'border-red-300 bg-red-50' 
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                  aria-invalid={errors.email ? 'true' : 'false'}
+                  aria-describedby={errors.email ? 'email-error' : undefined}
                 />
+                {errors.email && (
+                  <p id="email-error" className="mt-1 text-sm text-red-600">
+                    {errors.email}
+                  </p>
+                )}
               </div>
+              
               <div>
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      if (errors.password) setErrors(prev => ({ ...prev, password: '' }))
+                    }}
+                    className={`w-full px-3 py-2 pr-10 border rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors.password 
+                        ? 'border-red-300 bg-red-50' 
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                    aria-invalid={errors.password ? 'true' : 'false'}
+                    aria-describedby={errors.password ? 'password-error' : undefined}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p id="password-error" className="mt-1 text-sm text-red-600">
+                    {errors.password}
+                  </p>
+                )}
               </div>
+              
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Loading...' : isLoginMode ? 'Sign In' : 'Sign Up'}
+                {loading ? 'Please wait...' : isLoginMode ? 'Sign In' : 'Create Account'}
               </Button>
             </form>
           </CardContent>

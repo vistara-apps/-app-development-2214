@@ -1,13 +1,24 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { BarChart3, Code, Users, TrendingUp, Clock, CheckCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import Button from '../components/ui/Button'
+import LoadingSpinner, { SkeletonCard } from '../components/ui/LoadingSpinner'
 import { useProject } from '../contexts/ProjectContext'
 import { useAuth } from '../contexts/AuthContext'
 
 const Dashboard = () => {
   const { projects, currentProject } = useProject()
   const { user } = useAuth()
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Simulate loading data
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 1500)
+
+    return () => clearTimeout(timer)
+  }, [])
 
   const stats = [
     {
@@ -87,19 +98,47 @@ const Dashboard = () => {
     }
   ]
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        {/* Welcome Section Skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-8 bg-muted-foreground/20 rounded w-64 animate-pulse"></div>
+            <div className="h-4 bg-muted-foreground/20 rounded w-80 animate-pulse"></div>
+          </div>
+          <div className="h-10 bg-muted-foreground/20 rounded w-32 animate-pulse"></div>
+        </div>
+
+        {/* Stats Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <SkeletonCard key={index} />
+          ))}
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Welcome Section */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
             Welcome back, {user?.name}! 👋
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-2 text-lg">
             Here's what's happening with your projects today.
           </p>
         </div>
-        <Button>
+        <Button size="lg" className="self-start sm:self-auto">
           <Code className="w-4 h-4 mr-2" />
           Start Code Review
         </Button>
@@ -108,17 +147,17 @@ const Dashboard = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <Card key={index}>
+          <Card key={index} className="hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="space-y-1">
                   <p className="text-sm font-medium text-muted-foreground">
                     {stat.title}
                   </p>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-xs text-green-600 mt-1">{stat.change}</p>
+                  <p className="text-3xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-xs text-green-600 font-medium">{stat.change}</p>
                 </div>
-                <div className="p-3 bg-gray-100 rounded-full">
+                <div className="p-3 bg-muted rounded-full">
                   {stat.icon}
                 </div>
               </div>

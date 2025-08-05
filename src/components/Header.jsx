@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Shield, User, LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import MobileMenu from './ui/MobileMenu'
 
 const Header = ({ onLogout }) => {
   const location = useLocation()
@@ -47,8 +48,8 @@ const Header = ({ onLogout }) => {
             ))}
           </nav>
 
-          {/* User Menu */}
-          <div className="flex items-center space-x-4">
+          {/* Desktop User Menu */}
+          <div className="hidden md:flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <User className="h-5 w-5 text-muted-foreground" />
               <span className="text-sm font-medium">{user?.name}</span>
@@ -61,6 +62,13 @@ const Header = ({ onLogout }) => {
               <span>Logout</span>
             </button>
           </div>
+
+          {/* Mobile Menu */}
+          <MobileMenu 
+            navItems={navItems}
+            onLogout={handleLogout}
+            user={user}
+          />
         </div>
       </div>
     </header>
